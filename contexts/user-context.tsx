@@ -85,13 +85,24 @@ export const UserProvider = ({
 
   const handleSignIn = useCallback(async () => {
     try {
-      console.log("handleSignIn");
+      console.log("[handleSignIn] Starting sign in process");
       setIsLoading(true);
       setError(null);
 
       if (!context) {
-        console.error("Not in mini app");
+        console.error("[handleSignIn] No Farcaster context available");
         throw new Error("Not in mini app");
+      }
+
+      console.log("[handleSignIn] Farcaster context:", {
+        hasFid: !!context.user?.fid,
+        fid: context.user?.fid,
+        locationType: context.location?.type,
+      });
+
+      if (!context.user?.fid) {
+        console.error("[handleSignIn] No FID in context");
+        throw new Error("No FID available in Farcaster context");
       }
 
       const referrerFid =
@@ -99,18 +110,23 @@ export const UserProvider = ({
           ? context.location.cast.author.fid
           : undefined;
 
+      console.log("[handleSignIn] Calling sdk.quickAuth.getToken()");
       const result = await sdk.quickAuth.getToken();
 
       if (!result) {
+        console.error("[handleSignIn] No token returned from quickAuth");
         throw new Error("No token from SIWF Quick Auth");
       }
 
+      console.log("[handleSignIn] Got token, calling sign in API");
       await signIn({
         fid: context.user.fid,
         referrerFid,
         token: result.token,
       });
-    } catch {
+      console.log("[handleSignIn] Sign in successful");
+    } catch (error) {
+      console.error("[handleSignIn] Error:", error);
       setError(new Error("Failed to sign in"));
     } finally {
       setIsLoading(false);

@@ -35,16 +35,28 @@ export function MiniAppProvider({
 
   const setMiniAppReady = useCallback(async () => {
     try {
+      console.log("[MiniApp] Getting SDK context...");
       const context = await sdk.context;
+      console.log("[MiniApp] SDK context received:", {
+        hasContext: !!context,
+        hasFid: !!context?.user?.fid,
+        fid: context?.user?.fid,
+        hasClient: !!context?.client,
+      });
+      
       if (context) {
         setContext(context as MiniAppContext);
       } else {
+        console.error("[MiniApp] No context returned from SDK");
         setError("Failed to load Farcaster context");
       }
+      
+      console.log("[MiniApp] Calling sdk.actions.ready()");
       await sdk.actions.ready();
+      console.log("[MiniApp] SDK ready");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to initialize SDK");
-      console.error("SDK initialization error:", err);
+      console.error("[MiniApp] SDK initialization error:", err);
     } finally {
       setIsMiniAppReady(true);
     }
