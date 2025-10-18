@@ -60,9 +60,20 @@ export class IExecService {
 
       console.log('[iExec] Order submitted successfully, dealid:', dealid);
       return dealid;
-    } catch (error) {
+    } catch (error: any) {
       console.error('[iExec] Error submitting order:', error);
-      console.error('[iExec] Error details:', JSON.stringify(error, null, 2));
+      console.error('[iExec] Error message:', error?.message || 'No message');
+      console.error('[iExec] Error stack:', error?.stack || 'No stack');
+      console.error('[iExec] Error toString:', error?.toString() || 'No toString');
+      console.error('[iExec] Error name:', error?.name || 'No name');
+      
+      if (error?.response) {
+        console.error('[iExec] Error response:', error.response);
+      }
+      if (error?.data) {
+        console.error('[iExec] Error data:', error.data);
+      }
+      
       throw error;
     }
   }
@@ -129,14 +140,30 @@ export class IExecService {
   }
 
   private async getAppOrder() {
-    const appOrder = await this.iexec.order.createApporder({
-      app: this.appAddress,
-      appprice: 0,
-      volume: 1,
-      tag: ['tee', 'scone'],
-    });
-    
-    return this.iexec.order.signApporder(appOrder);
+    try {
+      console.log('[iExec] App address:', this.appAddress);
+      console.log('[iExec] Creating unsigned app order...');
+      
+      const appOrder = await this.iexec.order.createApporder({
+        app: this.appAddress,
+        appprice: 0,
+        volume: 1,
+        tag: ['tee', 'scone'],
+      });
+      
+      console.log('[iExec] Unsigned app order:', appOrder);
+      console.log('[iExec] Signing app order...');
+      
+      const signedOrder = await this.iexec.order.signApporder(appOrder);
+      console.log('[iExec] App order signed successfully');
+      
+      return signedOrder;
+    } catch (error: any) {
+      console.error('[iExec] Error in getAppOrder:', error);
+      console.error('[iExec] getAppOrder error message:', error?.message);
+      console.error('[iExec] getAppOrder error stack:', error?.stack);
+      throw error;
+    }
   }
 
   private async getWorkerpoolOrder() {
