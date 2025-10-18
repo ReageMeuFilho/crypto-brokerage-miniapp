@@ -6,7 +6,7 @@ import { env } from "@/lib/env";
  * @returns The farcaster manifest for the frame
  */
 export async function getFarcasterManifest() {
-  let frameName = "Crypto Brokerage";
+  let frameName = "Cast-POS";
   let noindex = false;
   const appUrl = env.NEXT_PUBLIC_URL;
   if (appUrl.includes("localhost")) {
@@ -36,13 +36,13 @@ export async function getFarcasterManifest() {
       splashBackgroundColor: "#1f2937",
       webhookUrl: `${appUrl}/api/webhook`,
       // Metadata https://github.com/farcasterxyz/miniapps/discussions/191
-      subtitle: "Trade crypto on Base network", // 30 characters, no emojis or special characters, short description under app name
-      description: "A mobile-first crypto trading platform with real-time quotes, portfolio management, and seamless Base network integration", // 170 characters, no emojis or special characters, promotional message displayed on Mini App Page
+      subtitle: "Accept crypto payments on Base", // 30 characters, no emojis or special characters, short description under app name
+      description: "Mini-POS for SMBs. Accept USDC payments via QR codes on Base network. Simple treasury management with one-click surplus allocation to reserve wallets.", // 170 characters, no emojis or special characters, promotional message displayed on Mini App Page
       primaryCategory: "finance",
-      tags: ["crypto", "trading", "defi", "base", "finance"], // up to 5 tags, filtering/search tags
-      tagline: "Trade crypto like a pro", // 30 characters, marketing tagline should be punchy and descriptive
+      tags: ["payments", "pos", "usdc", "base", "treasury"], // up to 5 tags, filtering/search tags
+      tagline: "Accept crypto like cash", // 30 characters, marketing tagline should be punchy and descriptive
       ogTitle: `${frameName}`, // 30 characters, app name + short tag, Title case, no emojis
-      ogDescription: "Mobile-first crypto brokerage for Base network. Trade BTC, ETH, SOL and more with real-time quotes.", // 100 characters, summarize core benefits in 1-2 lines
+      ogDescription: "Mini-POS for SMBs on Base. Accept USDC payments with QR codes. Manage treasury with simple allocation tools.", // 100 characters, summarize core benefits in 1-2 lines
       screenshotUrls: [
         // 1284 x 2778, visual previews of the app, max 3 screenshots
         `${appUrl}/images/feed.png`,

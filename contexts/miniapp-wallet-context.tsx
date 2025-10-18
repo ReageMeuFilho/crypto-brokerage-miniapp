@@ -1,13 +1,14 @@
 import { farcasterFrame as miniAppConnector } from "@farcaster/miniapp-wagmi-connector";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createConfig, http, WagmiProvider } from "wagmi";
-import { base, arbitrumSepolia } from "wagmi/chains";
+import { base, baseSepolia, arbitrumSepolia } from "wagmi/chains";
 import { metaMask, coinbaseWallet } from "wagmi/connectors";
 
 export const config = createConfig({
-  chains: [base, arbitrumSepolia],
+  chains: [base, baseSepolia, arbitrumSepolia],
   transports: {
     [base.id]: http(),
+    [baseSepolia.id]: http(),
     [arbitrumSepolia.id]: http(),
   },
   connectors: [
