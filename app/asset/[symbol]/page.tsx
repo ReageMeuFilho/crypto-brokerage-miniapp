@@ -431,7 +431,7 @@ export default function AssetDetailPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Trading Fee (0.1%)</span>
                     <span className="text-gray-900 dark:text-white">
-                      {formatCurrency(orderDetails.total * 0.001)}
+                      {formatCurrency((orderDetails.total || 0) * 0.001)}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -441,7 +441,7 @@ export default function AssetDetailPage() {
                   <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700 font-semibold">
                     <span className="text-gray-900 dark:text-white">Total Cost</span>
                     <span className="text-gray-900 dark:text-white">
-                      {formatCurrency(orderDetails.total + orderDetails.total * 0.001 + 0.5)}
+                      {formatCurrency((orderDetails.total || 0) + (orderDetails.total || 0) * 0.001 + 0.5)}
                     </span>
                   </div>
                 </div>
