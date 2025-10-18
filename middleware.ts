@@ -17,6 +17,7 @@ export default async function middleware(req: NextRequest) {
     req.nextUrl.pathname === "/api/portfolio" ||
     req.nextUrl.pathname === "/api/positions" ||
     req.nextUrl.pathname === "/api/history" ||
+    req.nextUrl.pathname === "/api/orders" ||
     req.nextUrl.pathname.startsWith("/api/quotes/") ||
     req.nextUrl.pathname.startsWith("/api/orderbook/")
   ) {
