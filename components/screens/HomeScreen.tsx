@@ -19,14 +19,17 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/contexts/user-context";
 
 export function HomeScreen() {
   const router = useRouter();
+  const { user, isLoading: isAuthLoading } = useUser();
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [topMovers, setTopMovers] = useState<Market[]>([]);
   const [loading, setLoading] = useState(true);
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [authError, setAuthError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     async function fetchData() {
@@ -38,7 +41,9 @@ export function HomeScreen() {
 
         if (!portfolioRes.ok || !marketsRes.ok) {
           console.error("Authentication required or API error");
-          setAuthError(true);
+          if (!isAuthLoading && user.data) {
+            setAuthError(true);
+          }
           setLoading(false);
           return;
         }
@@ -48,6 +53,7 @@ export function HomeScreen() {
 
         if (Array.isArray(marketsData)) {
           setPortfolio(portfolioData);
+          setAuthError(false);
           // Get top 3 movers by absolute change percentage
           const sorted = [...marketsData].sort(
             (a, b) => Math.abs(b.changePercent24h) - Math.abs(a.changePercent24h)
@@ -61,15 +67,22 @@ export function HomeScreen() {
       }
     }
 
-    fetchData();
-    const interval = setInterval(fetchData, 30000); // Refresh every 30s
-    return () => clearInterval(interval);
-  }, []);
+    if (!isAuthLoading) {
+      fetchData();
+      const interval = setInterval(fetchData, 30000); // Refresh every 30s
+      return () => clearInterval(interval);
+    }
+  }, [isAuthLoading, user.data, retryCount]);
 
-  if (loading) {
+  if (loading || isAuthLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4" />
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            {isAuthLoading ? "Authenticating..." : "Loading..."}
+          </p>
+        </div>
       </div>
     );
   }
