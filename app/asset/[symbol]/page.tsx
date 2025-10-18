@@ -33,6 +33,7 @@ export default function AssetDetailPage() {
   const [quantity, setQuantity] = useState("");
   const [limitPrice, setLimitPrice] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [orderDetails, setOrderDetails] = useState<any>(null);
 
@@ -68,12 +69,25 @@ export default function AssetDetailPage() {
     return () => clearInterval(interval);
   }, [symbol]);
 
-  const handleSubmitOrder = async () => {
+  const handleReviewOrder = () => {
     if (!quantity || (orderType === "limit" && !limitPrice)) {
       alert("Please fill in all required fields");
       return;
     }
 
+    setOrderDetails({
+      symbol: quote?.symbol,
+      name: quote?.name,
+      quantity: parseFloat(quantity),
+      price: orderType === "limit" && limitPrice ? parseFloat(limitPrice) : quote?.price,
+      total: estimatedTotal,
+      side,
+      type: orderType,
+    });
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmOrder = async () => {
     setSubmitting(true);
     try {
       const res = await fetch("/api/orders", {
@@ -100,6 +114,7 @@ export default function AssetDetailPage() {
           side,
           type: orderType,
         });
+        setShowConfirmation(false);
         setShowSuccessModal(true);
         setQuantity("");
         setLimitPrice("");
@@ -331,15 +346,139 @@ export default function AssetDetailPage() {
           <Button
             variant={side === "buy" ? "success" : "danger"}
             fullWidth
-            onClick={handleSubmitOrder}
+            onClick={handleReviewOrder}
             disabled={submitting || !quantity}
           >
-            {submitting
-              ? "Placing Order..."
-              : `${side === "buy" ? "Buy" : "Sell"} ${quote.symbol}`}
+            {`Review ${side === "buy" ? "Buy" : "Sell"} Order`}
           </Button>
         </Card>
       </div>
+
+      {/* Order Confirmation Screen */}
+      {showConfirmation && orderDetails && (
+        <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-y-auto">
+          <div className="min-h-screen pb-20">
+            {/* Header */}
+            <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowConfirmation(false)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                >
+                  <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                </button>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Confirm Order
+                </h1>
+              </div>
+            </div>
+
+            {/* Order Summary */}
+            <div className="m-4">
+              <Card>
+                <div className="text-center mb-6">
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    You are about to {orderDetails.side}
+                  </div>
+                  <div className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                    {orderDetails.quantity} {orderDetails.symbol}
+                  </div>
+                  <div className="text-xl text-gray-600 dark:text-gray-400">
+                    {formatCurrency(orderDetails.total)}
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-400">Order Type</span>
+                    <span className="font-semibold text-gray-900 dark:text-white capitalize">
+                      {orderDetails.type} {orderDetails.side}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-400">Asset</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      {orderDetails.name} ({orderDetails.symbol})
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-400">Quantity</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      {orderDetails.quantity}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-400">Price per {orderDetails.symbol}</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      {formatCurrency(orderDetails.price)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <span className="text-lg font-semibold text-gray-900 dark:text-white">Total</span>
+                    <span className="text-lg font-bold text-gray-900 dark:text-white">
+                      {formatCurrency(orderDetails.total)}
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {/* Fee Breakdown */}
+            <div className="m-4">
+              <Card>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Fee Summary</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Trading Fee (0.1%)</span>
+                    <span className="text-gray-900 dark:text-white">
+                      {formatCurrency(orderDetails.total * 0.001)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Network Fee</span>
+                    <span className="text-gray-900 dark:text-white">$0.50</span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700 font-semibold">
+                    <span className="text-gray-900 dark:text-white">Total Cost</span>
+                    <span className="text-gray-900 dark:text-white">
+                      {formatCurrency(orderDetails.total + orderDetails.total * 0.001 + 0.5)}
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {/* Terms */}
+            <div className="m-4">
+              <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                By placing this order, you agree to our Terms of Service and acknowledge that cryptocurrency trading involves risk.
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+              <div className="space-y-2">
+                <Button
+                  variant={orderDetails.side === "buy" ? "success" : "danger"}
+                  fullWidth
+                  onClick={handleConfirmOrder}
+                  disabled={submitting}
+                >
+                  {submitting ? "Placing Order..." : `Confirm ${orderDetails.side === "buy" ? "Buy" : "Sell"}`}
+                </Button>
+                <Button
+                  variant="secondary"
+                  fullWidth
+                  onClick={() => setShowConfirmation(false)}
+                  disabled={submitting}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Success Modal */}
       {orderDetails && (
