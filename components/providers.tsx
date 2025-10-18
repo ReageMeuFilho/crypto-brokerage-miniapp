@@ -2,7 +2,7 @@
 
 import { MiniAppProvider } from "@/contexts/miniapp-context";
 import { UserProvider } from "@/contexts/user-context";
-import { OnchainKitProvider } from "@coinbase/onchainkit/OnchainKitProvider";
+import { OnchainKitProvider } from "@coinbase/onchainkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { base } from "wagmi/chains";
 import { WagmiProvider, createConfig, http } from "wagmi";
