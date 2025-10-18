@@ -23,10 +23,11 @@ interface Quote {
 export default function AssetDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const symbol = params.symbol as string;
+  const symbol = (params?.symbol as string) || "";
 
   const [quote, setQuote] = useState<Quote | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [orderType, setOrderType] = useState<"market" | "limit">("market");
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [quantity, setQuantity] = useState("");
@@ -36,17 +37,27 @@ export default function AssetDetailPage() {
   const [orderDetails, setOrderDetails] = useState<any>(null);
 
   useEffect(() => {
+    if (!symbol) {
+      setError("No symbol provided");
+      setLoading(false);
+      return;
+    }
+
     async function fetchQuote() {
       try {
         const res = await fetch(`/api/quotes/${symbol}`);
         if (!res.ok) {
-          console.error("Failed to fetch quote");
+          console.error("Failed to fetch quote", res.status);
+          setError(`Failed to fetch quote: ${res.status}`);
+          setLoading(false);
           return;
         }
         const data = await res.json();
         setQuote(data);
-      } catch (error) {
-        console.error("Error fetching quote:", error);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching quote:", err);
+        setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
         setLoading(false);
       }
@@ -106,21 +117,21 @@ export default function AssetDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" />
       </div>
     );
   }
 
-  if (!quote) {
+  if (error || !quote) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <Card className="text-center">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50 dark:bg-gray-900">
+        <Card className="text-center max-w-md">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-            Asset Not Found
+            {error ? "Error Loading Asset" : "Asset Not Found"}
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            The asset {symbol} could not be found.
+            {error || `The asset ${symbol} could not be found.`}
           </p>
           <Button onClick={() => router.back()}>Go Back</Button>
         </Card>
