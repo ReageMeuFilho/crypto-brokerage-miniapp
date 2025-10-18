@@ -29,9 +29,9 @@ export class IExecService {
 
   constructor(ethProvider: any) {
     this.iexec = new IExec({
-      ethProvider: 'bellecour',
+      ethProvider,
     });
-    this.appAddress = process.env.NEXT_PUBLIC_IEXEC_APP_ADDRESS || '';
+    this.appAddress = process.env.NEXT_PUBLIC_IEXEC_APP_ADDRESS || '0x7767E37615C847247d3e54F89294FfB76D913D26';
   }
 
   async submitOrder(order: DarkPoolOrder): Promise<string> {
