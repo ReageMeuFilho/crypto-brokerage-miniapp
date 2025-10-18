@@ -2,12 +2,7 @@
 
 import { Search, Bell, Menu } from "lucide-react";
 import { useState } from "react";
-import {
-  ConnectWallet,
-  Wallet,
-  WalletDropdown,
-  WalletDropdownDisconnect,
-} from '@coinbase/onchainkit/wallet';
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 
 interface TopHeaderProps {
   title?: string;
@@ -23,6 +18,10 @@ export function TopHeader({
   showMenu = false,
 }: TopHeaderProps) {
   const [notificationCount] = useState(3);
+  const [showWalletMenu, setShowWalletMenu] = useState(false);
+  const { address, isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
+  const { disconnect } = useDisconnect();
 
   return (
     <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 safe-area-inset-top">
@@ -67,14 +66,62 @@ export function TopHeader({
               )}
             </button>
           )}
-          <Wallet>
-            <ConnectWallet className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors">
-              <span>Connect Wallet</span>
-            </ConnectWallet>
-            <WalletDropdown>
-              <WalletDropdownDisconnect />
-            </WalletDropdown>
-          </Wallet>
+          <div className="relative">
+            {!isConnected ? (
+              <button
+                onClick={() => setShowWalletMenu(!showWalletMenu)}
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
+              >
+                Connect Wallet
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowWalletMenu(!showWalletMenu)}
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
+              >
+                {address?.slice(0, 6)}...{address?.slice(-4)}
+              </button>
+            )}
+            
+            {showWalletMenu && (
+              <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                {!isConnected ? (
+                  <div className="p-2">
+                    <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 px-3 py-2">
+                      Connect a wallet
+                    </div>
+                    {connectors.map((connector) => (
+                      <button
+                        key={connector.id}
+                        onClick={() => {
+                          connect({ connector });
+                          setShowWalletMenu(false);
+                        }}
+                        className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md text-sm text-gray-900 dark:text-white"
+                      >
+                        {connector.name}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-2">
+                    <div className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
+                      {address?.slice(0, 6)}...{address?.slice(-4)}
+                    </div>
+                    <button
+                      onClick={() => {
+                        disconnect();
+                        setShowWalletMenu(false);
+                      }}
+                      className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md text-sm text-red-600 dark:text-red-400"
+                    >
+                      Disconnect
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>
