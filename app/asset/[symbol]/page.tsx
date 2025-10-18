@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { SuccessModal } from "@/components/ui/SuccessModal";
 import { ArrowLeft, TrendingUp, TrendingDown } from "lucide-react";
 import { formatCurrency, formatPercent, getPnLColorClass } from "@/lib/utils";
 
@@ -31,6 +32,8 @@ export default function AssetDetailPage() {
   const [quantity, setQuantity] = useState("");
   const [limitPrice, setLimitPrice] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [orderDetails, setOrderDetails] = useState<any>(null);
 
   useEffect(() => {
     async function fetchQuote() {
@@ -75,7 +78,18 @@ export default function AssetDetailPage() {
       });
 
       if (res.ok) {
-        alert(`${side.toUpperCase()} order placed successfully!`);
+        const order = await res.json();
+        setOrderDetails({
+          ...order,
+          symbol: quote?.symbol,
+          name: quote?.name,
+          quantity: parseFloat(quantity),
+          price: orderType === "limit" && limitPrice ? parseFloat(limitPrice) : quote?.price,
+          total: estimatedTotal,
+          side,
+          type: orderType,
+        });
+        setShowSuccessModal(true);
         setQuantity("");
         setLimitPrice("");
       } else {
@@ -304,7 +318,7 @@ export default function AssetDetailPage() {
 
           {/* Submit Button */}
           <Button
-            variant={side === "buy" ? "primary" : "secondary"}
+            variant={side === "buy" ? "success" : "danger"}
             fullWidth
             onClick={handleSubmitOrder}
             disabled={submitting || !quantity}
@@ -315,6 +329,78 @@ export default function AssetDetailPage() {
           </Button>
         </Card>
       </div>
+
+      {/* Success Modal */}
+      {orderDetails && (
+        <SuccessModal
+          isOpen={showSuccessModal}
+          onClose={() => setShowSuccessModal(false)}
+          title="Trade Successful!"
+          subtitle="Your order has been executed successfully"
+          actions={
+            <>
+              <Button
+                variant="primary"
+                fullWidth
+                onClick={() => router.push("/portfolio")}
+              >
+                View in Portfolio
+              </Button>
+              <Button
+                variant="secondary"
+                fullWidth
+                onClick={() => setShowSuccessModal(false)}
+              >
+                Make Another Trade
+              </Button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            {/* Trade Details */}
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
+              <div className="text-center mb-4">
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  {orderDetails.side === "buy" ? "Bought" : "Sold"}
+                </div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {orderDetails.quantity} {orderDetails.symbol}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  {formatCurrency(orderDetails.total)}
+                </div>
+              </div>
+
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Trade Type
+                  </span>
+                  <span className="font-semibold text-gray-900 dark:text-white capitalize">
+                    {orderDetails.type} {orderDetails.side}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Price per {orderDetails.symbol}
+                  </span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {formatCurrency(orderDetails.price)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Status
+                  </span>
+                  <span className="font-semibold text-success-600 dark:text-success-400">
+                    Confirmed
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </SuccessModal>
+      )}
     </div>
   );
 }
