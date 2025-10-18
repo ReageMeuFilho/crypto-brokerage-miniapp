@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/Button";
 import { SuccessModal } from "@/components/ui/SuccessModal";
 import { ArrowLeft, TrendingUp, TrendingDown } from "lucide-react";
 import { formatCurrency, formatPercent, getPnLColorClass } from "@/lib/utils";
+import { useIExec } from "@/hooks/use-iexec";
+import { useAccount, useSendTransaction, useSwitchChain } from "wagmi";
+import { arbitrumSepolia } from "wagmi/chains";
 
 interface Quote {
   symbol: string;
@@ -36,6 +39,11 @@ export default function AssetDetailPage() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [orderDetails, setOrderDetails] = useState<any>(null);
+
+  const { address, isConnected, chain } = useAccount();
+  const { submitAndExecuteOrder, isProcessing, error: iexecError } = useIExec();
+  const { sendTransaction } = useSendTransaction();
+  const { switchChain } = useSwitchChain();
 
   useEffect(() => {
     if (!symbol) {
@@ -88,24 +96,48 @@ export default function AssetDetailPage() {
   };
 
   const handleConfirmOrder = async () => {
+    if (!isConnected) {
+      alert("Please connect your wallet first");
+      return;
+    }
+
+    if (chain?.id !== arbitrumSepolia.id) {
+      try {
+        await switchChain({ chainId: arbitrumSepolia.id });
+      } catch (error) {
+        alert("Please switch to Arbitrum Sepolia network");
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          symbol,
-          side,
-          type: orderType,
-          amount: parseFloat(quantity),
-          price: orderType === "limit" ? parseFloat(limitPrice) : quote?.price,
-        }),
-      });
+      const darkPoolOrder = {
+        symbol,
+        side,
+        amount: parseFloat(quantity),
+        price: orderType === "limit" ? parseFloat(limitPrice) : quote?.price,
+        timestamp: Date.now(),
+      };
 
-      if (res.ok) {
-        const order = await res.json();
+      const result = await submitAndExecuteOrder(darkPoolOrder);
+
+      if (result) {
+        const { raw_tx, result: orderResult } = result;
+        
+        const txHash = await sendTransaction({
+          to: raw_tx.to as `0x${string}`,
+          data: raw_tx.data as `0x${string}`,
+          value: BigInt(raw_tx.value),
+          gas: BigInt(raw_tx.gasLimit),
+        });
+
         setOrderDetails({
-          ...order,
+          orderId: orderResult.orderId,
+          status: orderResult.status,
+          executedPrice: orderResult.executedPrice,
+          executedAmount: orderResult.executedAmount,
+          txHash,
           symbol: quote?.symbol,
           name: quote?.name,
           quantity: parseFloat(quantity),
@@ -119,12 +151,11 @@ export default function AssetDetailPage() {
         setQuantity("");
         setLimitPrice("");
       } else {
-        const error = await res.json();
-        alert(`Failed to place order: ${error.error || "Unknown error"}`);
+        alert(`Failed to place order: ${iexecError || "Unknown error"}`);
       }
     } catch (error) {
       console.error("Error placing order:", error);
-      alert("Failed to place order");
+      alert(`Failed to place order: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setSubmitting(false);
     }
