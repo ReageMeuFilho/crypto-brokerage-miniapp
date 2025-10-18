@@ -1,16 +1,16 @@
 "use client";
 
-import { Home, TrendingUp, ArrowLeftRight, PieChart, Activity } from "lucide-react";
+import { Home, TrendingUp, ArrowLeftRight, PieChart, Activity, QrCode, Wallet } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/", icon: Home, label: "Home" },
+  { href: "/accept", icon: QrCode, label: "Accept" },
+  { href: "/treasury", icon: Wallet, label: "Treasury" },
   { href: "/markets", icon: TrendingUp, label: "Markets" },
-  { href: "/trade", icon: ArrowLeftRight, label: "Trade" },
   { href: "/portfolio", icon: PieChart, label: "Portfolio" },
-  { href: "/activity", icon: Activity, label: "Activity" },
 ];
 
 export function BottomNav() {
