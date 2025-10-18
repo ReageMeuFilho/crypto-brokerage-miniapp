@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { SuccessModal } from "@/components/ui/SuccessModal";
+import { TopHeader } from "@/components/layout/TopHeader";
 import { ArrowLeft, TrendingUp, TrendingDown } from "lucide-react";
 import { formatCurrency, formatPercent, getPnLColorClass } from "@/lib/utils";
 import { useIExec } from "@/hooks/use-iexec";
@@ -389,19 +390,18 @@ export default function AssetDetailPage() {
       {showConfirmation && orderDetails && (
         <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-y-auto">
           <div className="min-h-screen pb-20">
-            {/* Header */}
-            <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setShowConfirmation(false)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-                >
-                  <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                </button>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Confirm Order
-                </h1>
-              </div>
+            {/* Top Header with Wallet */}
+            <TopHeader title="Confirm Order" showSearch={false} showNotifications={false} />
+            
+            {/* Back Button */}
+            <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+              <button
+                onClick={() => setShowConfirmation(false)}
+                className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                <span>Back to Order</span>
+              </button>
             </div>
 
             {/* Order Summary */}
