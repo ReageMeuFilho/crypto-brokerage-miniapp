@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { USDC, EXPLORER, USDC_DECIMALS, RESERVE } from "@/lib/chain";
-import { erc20Abi, createWalletClient, custom, parseUnits, formatUnits } from "viem";
+import { erc20Abi, createWalletClient, createPublicClient, custom, http, parseUnits, formatUnits } from "viem";
 import { baseSepolia } from "viem/chains";
 
 export default function TreasuryScreen() {
-  const [balance, setBalance] = useState<bigint>(0n);
+  const [balance, setBalance] = useState<bigint>(BigInt(0));
   const [target, setTarget] = useState("1000");
   const [loading, setLoading] = useState(false);
   const [address, setAddress] = useState<string>("");
@@ -20,12 +20,12 @@ export default function TreasuryScreen() {
       const [addr] = await (window as any).ethereum.request({ method: "eth_requestAccounts" });
       setAddress(addr);
       
-      const client = createWalletClient({ 
+      const publicClient = createPublicClient({ 
         chain: baseSepolia,
-        transport: custom((window as any).ethereum) 
+        transport: http()
       });
       
-      const bal = await client.readContract({ 
+      const bal = await publicClient.readContract({ 
         address: USDC as `0x${string}`, 
         abi: erc20Abi, 
         functionName: "balanceOf", 
@@ -45,7 +45,7 @@ export default function TreasuryScreen() {
 
   const surplus = useMemo(() => {
     const t = parseUnits(Number(target || "0").toFixed(6), USDC_DECIMALS);
-    return balance > t ? balance - t : 0n;
+    return balance > t ? balance - t : BigInt(0);
   }, [balance, target]);
 
   async function allocate() {
