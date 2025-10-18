@@ -23,6 +23,8 @@ export function TopHeader({
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
 
+  console.log('[TopHeader] Render:', { address, isConnected, connectorsCount: connectors?.length });
+
   return (
     <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 safe-area-inset-top">
       <div className="flex items-center justify-between h-14 px-4">
