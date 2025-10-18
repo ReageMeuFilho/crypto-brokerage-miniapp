@@ -3,30 +3,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createConfig, http, WagmiProvider } from "wagmi";
 import { base, arbitrumSepolia } from "wagmi/chains";
 import { metaMask, coinbaseWallet } from "wagmi/connectors";
-import { defineChain } from "viem";
-
-const bellecour = defineChain({
-  id: 134,
-  name: 'iExec Sidechain',
-  nativeCurrency: {
-    decimals: 18,
-    name: 'xRLC',
-    symbol: 'xRLC',
-  },
-  rpcUrls: {
-    default: { http: ['https://bellecour.iex.ec'] },
-  },
-  blockExplorers: {
-    default: { name: 'Blockscout', url: 'https://blockscout-bellecour.iex.ec' },
-  },
-});
 
 export const config = createConfig({
-  chains: [base, arbitrumSepolia, bellecour],
+  chains: [base, arbitrumSepolia],
   transports: {
     [base.id]: http(),
     [arbitrumSepolia.id]: http(),
-    [bellecour.id]: http('https://bellecour.iex.ec'),
   },
   connectors: [
     miniAppConnector(),
