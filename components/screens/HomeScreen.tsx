@@ -13,6 +13,7 @@ export function HomeScreen() {
   const [topMovers, setTopMovers] = useState<Market[]>([]);
   const [loading, setLoading] = useState(true);
   const [balanceVisible, setBalanceVisible] = useState(true);
+  const [authError, setAuthError] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -22,15 +23,24 @@ export function HomeScreen() {
           fetch("/api/markets"),
         ]);
 
+        if (!portfolioRes.ok || !marketsRes.ok) {
+          console.error("Authentication required or API error");
+          setAuthError(true);
+          setLoading(false);
+          return;
+        }
+
         const portfolioData = await portfolioRes.json();
         const marketsData = await marketsRes.json();
 
-        setPortfolio(portfolioData);
-        // Get top 3 movers by absolute change percentage
-        const sorted = [...marketsData].sort(
-          (a, b) => Math.abs(b.changePercent24h) - Math.abs(a.changePercent24h)
-        );
-        setTopMovers(sorted.slice(0, 3));
+        if (Array.isArray(marketsData)) {
+          setPortfolio(portfolioData);
+          // Get top 3 movers by absolute change percentage
+          const sorted = [...marketsData].sort(
+            (a, b) => Math.abs(b.changePercent24h) - Math.abs(a.changePercent24h)
+          );
+          setTopMovers(sorted.slice(0, 3));
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -47,6 +57,44 @@ export function HomeScreen() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
+
+  if (authError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <Card className="max-w-md text-center">
+          <div className="mb-4">
+            <svg
+              className="w-16 h-16 mx-auto text-blue-600 dark:text-blue-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            Authentication Required
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            This app is designed to work within Farcaster. Please access it through the Base app or Warpcast.
+          </p>
+          <div className="text-sm text-gray-500 dark:text-gray-500">
+            <p className="mb-2">To use this app:</p>
+            <ol className="text-left list-decimal list-inside space-y-1">
+              <li>Open Warpcast or the Base app</li>
+              <li>Find the Crypto Brokerage mini app</li>
+              <li>Launch it from within Farcaster</li>
+            </ol>
+          </div>
+        </Card>
       </div>
     );
   }
