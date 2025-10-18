@@ -37,19 +37,33 @@ export class IExecService {
   async submitOrder(order: DarkPoolOrder): Promise<string> {
     try {
       const orderData = JSON.stringify(order);
+      console.log('[iExec] Creating app order...');
       
+      const apporder = await this.getAppOrder();
+      console.log('[iExec] App order created:', apporder);
+      
+      console.log('[iExec] Fetching workerpool order...');
+      const workerpoolorder = await this.getWorkerpoolOrder();
+      console.log('[iExec] Workerpool order fetched:', workerpoolorder);
+      
+      console.log('[iExec] Creating request order...');
+      const requestorder = await this.createRequestOrder(orderData);
+      console.log('[iExec] Request order created:', requestorder);
+      
+      console.log('[iExec] Matching orders...');
       const { dealid } = await this.iexec.order.matchOrders({
-        apporder: await this.getAppOrder(),
+        apporder,
         datasetorder: undefined,
-        workerpoolorder: await this.getWorkerpoolOrder(),
-        requestorder: await this.createRequestOrder(orderData),
+        workerpoolorder,
+        requestorder,
       });
 
-      console.log('Order submitted to iExec, dealid:', dealid);
+      console.log('[iExec] Order submitted successfully, dealid:', dealid);
       return dealid;
     } catch (error) {
-      console.error('Error submitting order to iExec:', error);
-      throw new Error('Failed to submit order to iExec');
+      console.error('[iExec] Error submitting order:', error);
+      console.error('[iExec] Error details:', JSON.stringify(error, null, 2));
+      throw error;
     }
   }
 
