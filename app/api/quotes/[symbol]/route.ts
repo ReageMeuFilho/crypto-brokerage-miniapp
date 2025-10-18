@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getMockQuote } from '@/lib/mock-data';
+import { getMockMarkets } from '@/lib/mock-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,8 +9,17 @@ export async function GET(
 ) {
   try {
     const symbol = params.symbol.toUpperCase();
-    const quote = getMockQuote(symbol);
-    return NextResponse.json(quote);
+    const markets = getMockMarkets();
+    const market = markets.find(m => m.symbol === symbol);
+    
+    if (!market) {
+      return NextResponse.json(
+        { error: 'Symbol not found' },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json(market);
   } catch (error) {
     console.error('Error fetching quote:', error);
     return NextResponse.json(
