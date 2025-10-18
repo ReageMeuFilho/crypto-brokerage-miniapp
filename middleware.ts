@@ -7,11 +7,18 @@ export const config = {
 };
 
 export default async function middleware(req: NextRequest) {
-  // Skip auth check for sign-in endpoint
+  // Skip auth check for public endpoints and mock data endpoints
   if (
     req.nextUrl.pathname === "/api/auth/sign-in" ||
+    req.nextUrl.pathname === "/api/auth/check" ||
     req.nextUrl.pathname.includes("/api/og") ||
-    req.nextUrl.pathname.includes("/api/webhook")
+    req.nextUrl.pathname.includes("/api/webhook") ||
+    req.nextUrl.pathname === "/api/markets" ||
+    req.nextUrl.pathname === "/api/portfolio" ||
+    req.nextUrl.pathname === "/api/positions" ||
+    req.nextUrl.pathname === "/api/history" ||
+    req.nextUrl.pathname.startsWith("/api/quotes/") ||
+    req.nextUrl.pathname.startsWith("/api/orderbook/")
   ) {
     return NextResponse.next();
   }
