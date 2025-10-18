@@ -119,6 +119,7 @@ export class IExecService {
       app: this.appAddress,
       appprice: 0,
       volume: 1,
+      tag: ['tee', 'scone'],
     });
     
     return this.iexec.order.signApporder(appOrder);
@@ -141,6 +142,7 @@ export class IExecService {
       workerpoolmaxprice: 0,
       requester: await this.iexec.wallet.getAddress(),
       volume: 1,
+      tag: ['tee', 'scone'],
       params: {
         iexec_args: inputData,
       },
