@@ -97,8 +97,8 @@ export default function AssetDetailPage() {
           symbol,
           side,
           type: orderType,
-          quantity: parseFloat(quantity),
-          price: orderType === "limit" ? parseFloat(limitPrice) : undefined,
+          amount: parseFloat(quantity),
+          price: orderType === "limit" ? parseFloat(limitPrice) : quote?.price,
         }),
       });
 
