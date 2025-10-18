@@ -2,7 +2,7 @@ import { farcasterFrame as miniAppConnector } from "@farcaster/miniapp-wagmi-con
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createConfig, http, WagmiProvider } from "wagmi";
 import { base, arbitrumSepolia } from "wagmi/chains";
-import { metaMask, coinbaseWallet, walletConnect } from "wagmi/connectors";
+import { metaMask, coinbaseWallet } from "wagmi/connectors";
 
 export const config = createConfig({
   chains: [base, arbitrumSepolia],
@@ -16,9 +16,6 @@ export const config = createConfig({
     coinbaseWallet({
       appName: "Crypto Brokerage",
       preference: "smartWalletOnly",
-    }),
-    walletConnect({
-      projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "",
     }),
   ],
 });
