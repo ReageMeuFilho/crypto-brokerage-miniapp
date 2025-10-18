@@ -19,21 +19,21 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
-  const baseClasses = "inline-flex items-center justify-center font-medium rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
+  const baseClasses = "inline-flex items-center justify-center font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-soft hover:shadow-soft-lg active:scale-[0.98]";
 
   const variantClasses = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
-    secondary: "bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500",
+    primary: "bg-primary-500 text-white hover:bg-primary-600 focus:ring-primary-500",
+    secondary: "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 focus:ring-gray-500",
     outline: "border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 focus:ring-gray-500",
-    ghost: "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:ring-gray-500",
-    success: "bg-green-600 text-white hover:bg-green-700 focus:ring-green-500",
-    danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
+    ghost: "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:ring-gray-500 shadow-none",
+    success: "bg-success-500 text-white hover:bg-success-600 focus:ring-success-500",
+    danger: "bg-error-500 text-white hover:bg-error-600 focus:ring-error-500",
   };
 
   const sizeClasses = {
-    sm: "text-sm px-3 py-1.5 min-h-[36px]",
-    md: "text-base px-4 py-2 min-h-[44px]",
-    lg: "text-lg px-6 py-3 min-h-[52px]",
+    sm: "text-sm px-4 py-2 min-h-[40px]",
+    md: "text-base px-5 py-2.5 min-h-[48px]",
+    lg: "text-lg px-6 py-3 min-h-[56px]",
   };
 
   return (
