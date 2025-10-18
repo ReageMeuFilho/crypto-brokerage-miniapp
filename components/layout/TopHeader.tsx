@@ -2,6 +2,12 @@
 
 import { Search, Bell, Menu } from "lucide-react";
 import { useState } from "react";
+import {
+  ConnectWallet,
+  Wallet,
+  WalletDropdown,
+  WalletDropdownDisconnect,
+} from '@coinbase/onchainkit/wallet';
 
 interface TopHeaderProps {
   title?: string;
@@ -61,6 +67,14 @@ export function TopHeader({
               )}
             </button>
           )}
+          <Wallet>
+            <ConnectWallet className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors">
+              <span>Connect Wallet</span>
+            </ConnectWallet>
+            <WalletDropdown>
+              <WalletDropdownDisconnect />
+            </WalletDropdown>
+          </Wallet>
         </div>
       </div>
     </header>
