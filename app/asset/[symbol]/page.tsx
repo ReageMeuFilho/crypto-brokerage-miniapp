@@ -1,0 +1,320 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { ArrowLeft, TrendingUp, TrendingDown } from "lucide-react";
+import { formatCurrency, formatPercent, getPnLColorClass } from "@/lib/utils";
+
+interface Quote {
+  symbol: string;
+  name: string;
+  price: number;
+  change24h: number;
+  changePercent24h: number;
+  high24h: number;
+  low24h: number;
+  volume24h: number;
+  sparkline: number[];
+}
+
+export default function AssetDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const symbol = params.symbol as string;
+
+  const [quote, setQuote] = useState<Quote | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [orderType, setOrderType] = useState<"market" | "limit">("market");
+  const [side, setSide] = useState<"buy" | "sell">("buy");
+  const [quantity, setQuantity] = useState("");
+  const [limitPrice, setLimitPrice] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    async function fetchQuote() {
+      try {
+        const res = await fetch(`/api/quotes/${symbol}`);
+        if (!res.ok) {
+          console.error("Failed to fetch quote");
+          return;
+        }
+        const data = await res.json();
+        setQuote(data);
+      } catch (error) {
+        console.error("Error fetching quote:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchQuote();
+    const interval = setInterval(fetchQuote, 10000); // Refresh every 10s
+    return () => clearInterval(interval);
+  }, [symbol]);
+
+  const handleSubmitOrder = async () => {
+    if (!quantity || (orderType === "limit" && !limitPrice)) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          symbol,
+          side,
+          type: orderType,
+          quantity: parseFloat(quantity),
+          price: orderType === "limit" ? parseFloat(limitPrice) : undefined,
+        }),
+      });
+
+      if (res.ok) {
+        alert(`${side.toUpperCase()} order placed successfully!`);
+        setQuantity("");
+        setLimitPrice("");
+      } else {
+        const error = await res.json();
+        alert(`Failed to place order: ${error.error || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error placing order:", error);
+      alert("Failed to place order");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
+
+  if (!quote) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <Card className="text-center">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            Asset Not Found
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            The asset {symbol} could not be found.
+          </p>
+          <Button onClick={() => router.back()}>Go Back</Button>
+        </Card>
+      </div>
+    );
+  }
+
+  const estimatedTotal = quantity
+    ? parseFloat(quantity) *
+      (orderType === "limit" && limitPrice
+        ? parseFloat(limitPrice)
+        : quote.price)
+    : 0;
+
+  return (
+    <div className="pb-20">
+      {/* Header */}
+      <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.back()}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          </button>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              {quote.name}
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {quote.symbol}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Price Card */}
+      <div className="m-4">
+        <Card>
+          <div className="mb-4">
+            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+              {formatCurrency(quote.price)}
+            </div>
+            <div
+              className={`flex items-center gap-1 text-sm ${getPnLColorClass(
+                quote.change24h
+              )}`}
+            >
+              {quote.change24h >= 0 ? (
+                <TrendingUp className="w-4 h-4" />
+              ) : (
+                <TrendingDown className="w-4 h-4" />
+              )}
+              <span>
+                {quote.change24h >= 0 ? "+" : ""}
+                {formatCurrency(quote.change24h)}
+              </span>
+              <span>({formatPercent(quote.changePercent24h)})</span>
+              <span className="text-gray-500">24h</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                24h High
+              </div>
+              <div className="font-semibold text-gray-900 dark:text-white">
+                {formatCurrency(quote.high24h)}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                24h Low
+              </div>
+              <div className="font-semibold text-gray-900 dark:text-white">
+                {formatCurrency(quote.low24h)}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                24h Volume
+              </div>
+              <div className="font-semibold text-gray-900 dark:text-white">
+                {formatCurrency(quote.volume24h)}
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Order Entry */}
+      <div className="m-4">
+        <Card>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Place Order
+          </h2>
+
+          {/* Buy/Sell Toggle */}
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            <button
+              onClick={() => setSide("buy")}
+              className={`py-3 rounded-lg font-semibold transition-colors ${
+                side === "buy"
+                  ? "bg-green-600 text-white"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+              }`}
+            >
+              Buy
+            </button>
+            <button
+              onClick={() => setSide("sell")}
+              className={`py-3 rounded-lg font-semibold transition-colors ${
+                side === "sell"
+                  ? "bg-red-600 text-white"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+              }`}
+            >
+              Sell
+            </button>
+          </div>
+
+          {/* Order Type */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Order Type
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setOrderType("market")}
+                className={`py-2 px-4 rounded-lg font-medium transition-colors ${
+                  orderType === "market"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                }`}
+              >
+                Market
+              </button>
+              <button
+                onClick={() => setOrderType("limit")}
+                className={`py-2 px-4 rounded-lg font-medium transition-colors ${
+                  orderType === "limit"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                }`}
+              >
+                Limit
+              </button>
+            </div>
+          </div>
+
+          {/* Quantity */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Quantity
+            </label>
+            <input
+              type="number"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              placeholder="0.00"
+              className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
+            />
+          </div>
+
+          {/* Limit Price (only for limit orders) */}
+          {orderType === "limit" && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Limit Price
+              </label>
+              <input
+                type="number"
+                value={limitPrice}
+                onChange={(e) => setLimitPrice(e.target.value)}
+                placeholder={formatCurrency(quote.price)}
+                className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
+              />
+            </div>
+          )}
+
+          {/* Estimated Total */}
+          {quantity && (
+            <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Estimated Total
+                </span>
+                <span className="font-semibold text-gray-900 dark:text-white">
+                  {formatCurrency(estimatedTotal)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <Button
+            variant={side === "buy" ? "primary" : "secondary"}
+            fullWidth
+            onClick={handleSubmitOrder}
+            disabled={submitting || !quantity}
+          >
+            {submitting
+              ? "Placing Order..."
+              : `${side === "buy" ? "Buy" : "Sell"} ${quote.symbol}`}
+          </Button>
+        </Card>
+      </div>
+    </div>
+  );
+}
