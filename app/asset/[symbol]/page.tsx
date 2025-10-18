@@ -97,15 +97,20 @@ export default function AssetDetailPage() {
   };
 
   const handleConfirmOrder = async () => {
-    if (!isConnected) {
+    console.log('handleConfirmOrder called', { isConnected, address, chain: chain?.id });
+    
+    if (!isConnected || !address) {
+      console.error('Wallet not connected', { isConnected, address });
       alert("Please connect your wallet first");
       return;
     }
 
     if (chain?.id !== arbitrumSepolia.id) {
+      console.log('Switching to Arbitrum Sepolia', { currentChain: chain?.id, targetChain: arbitrumSepolia.id });
       try {
         await switchChain({ chainId: arbitrumSepolia.id });
       } catch (error) {
+        console.error('Failed to switch chain', error);
         alert("Please switch to Arbitrum Sepolia network");
         return;
       }
@@ -121,6 +126,7 @@ export default function AssetDetailPage() {
         timestamp: Date.now(),
       };
 
+      console.log('Submitting order to iExec', darkPoolOrder);
       const result = await submitAndExecuteOrder(darkPoolOrder);
 
       if (result) {
