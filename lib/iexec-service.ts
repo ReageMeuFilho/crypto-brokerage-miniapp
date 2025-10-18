@@ -29,7 +29,7 @@ export class IExecService {
 
   constructor(ethProvider: any) {
     this.iexec = new IExec({
-      ethProvider,
+      ethProvider: 'bellecour',
     });
     this.appAddress = process.env.NEXT_PUBLIC_IEXEC_APP_ADDRESS || '';
   }
